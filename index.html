@@ -16,27 +16,45 @@
   </head>
 
   <body>
+    <!-- Beginning header -->
     <header>
+      <!-- Beginning nav -->
       <nav>
-        <h1><a href="/">Restaurant Reviews</a></h1>
+        <h1><a href="/" tabindex="-1">Restaurant Reviews</a></h1>
       </nav>
+      <!-- End nav -->
     </header>
+    <!-- End header -->
 
+    <!-- Beginning main -->
     <main id="maincontent">
       <section id="map-container"><div id="map"></div></section>
       <section>
         <div class="filter-options">
           <h2>Filter Results</h2>
-          <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
+          <select
+            tabindex="1"
+            id="neighborhoods-select"
+            name="neighborhoods"
+            aria-label="Select Neighborhood"
+            onchange="updateRestaurants()"
+          >
             <option value="all">All Neighborhoods</option>
           </select>
-          <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()">
+          <select
+            tabindex="2"
+            id="cuisines-select"
+            name="cuisines"
+            aria-label="Select Cusisine"
+            onchange="updateRestaurants()"
+          >
             <option value="all">All Cuisines</option>
           </select>
         </div>
         <ul id="restaurants-list"></ul>
       </section>
     </main>
+    <!-- End main -->
     <!-- Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
