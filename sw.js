@@ -1,8 +1,8 @@
 self.addEventListener('install', function(event) {
   // Perform install steps
 });
-var CACHE_NAME = 'restaurant-cache';
-var urlsToCache = [
+const CACHE_NAME = 'restaurant-cache';
+const urlsToCache = [
   '/',
   './index.html',
   './restaurant.html',
