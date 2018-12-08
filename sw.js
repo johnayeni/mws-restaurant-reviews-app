@@ -49,7 +49,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(event.request, { ignoreSearch: true }).then((response) => {
       return response || fetch(event.request);
     }),
   );
@@ -59,7 +59,7 @@ function servePhoto(request) {
   const storageUrl = request.url;
 
   return caches.open(contentImgsCache).then((cache) => {
-    return cache.match(storageUrl).then((response) => {
+    return cache.match(storageUrl, { ignoreSearch: true }).then((response) => {
       if (response) return response;
 
       return fetch(request).then((networkResponse) => {
