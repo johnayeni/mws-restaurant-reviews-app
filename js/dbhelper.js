@@ -21,33 +21,31 @@ class DBHelper {
         // Got a success response from server!
         const restaurants = await response.json();
         callback(null, restaurants);
+      } else {
+        callback('Could not fetch restaurants', null);
       }
     } catch (error) {
-      callback(error.message, null);
+      callback(error, null);
     }
   }
 
   /**
    * Fetch a restaurant by its ID.
    */
-  static fetchRestaurantById(id, callback) {
-    // fetch all restaurants with proper error handling.
-    DBHelper.fetchRestaurants((error, restaurants) => {
-      if (error) {
-        callback(error, null);
+  static async fetchRestaurantById(id, callback) {
+    try {
+      const response = await fetch(`${DBHelper.DATABASE_URL}/${id}`);
+      if (response.status === 200) {
+        // Got a success response from server!
+        const restaurant = await response.json();
+        callback(null, restaurant);
       } else {
-        const restaurant = restaurants.find((r) => r.id == id);
-        if (restaurant) {
-          // Got the restaurant
-          callback(null, restaurant);
-        } else {
-          // Restaurant does not exist in the database
-          callback('Restaurant does not exist', null);
-        }
+        callback('Restaurant does not exist', null);
       }
-    });
+    } catch (error) {
+      callback(error, null);
+    }
   }
-
   /**
    * Fetch restaurants by a cuisine type with proper error handling.
    */
