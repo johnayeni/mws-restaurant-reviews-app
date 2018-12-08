@@ -2,7 +2,7 @@ let restaurant;
 var newMap;
 
 /**
- * Initialize map as soon as the page is loaded.
+ * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
   fetchRestaurantFromURL((error, restaurant) => {

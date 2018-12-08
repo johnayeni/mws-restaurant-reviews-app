@@ -135,6 +135,7 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
   restaurants.forEach((restaurant) => {
     ul.append(createRestaurantHTML(restaurant, tabIndex));
+    // increase the tab index value for each restaurant
     tabIndex++;
   });
   addMarkersToMap();
