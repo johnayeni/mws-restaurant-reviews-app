@@ -1,0 +1,19 @@
+{
+  "name": "mws-restaurant-reviews-app",
+  "version": "1.0.0",
+  "description": "1. In this folder, start up a simple HTTP server to serve up the site files on your local computer. Python has some simple tools to do this, and you don't even need to know Python. For most people, it's already installed on your computer.",
+  "main": "gulp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnayeni/mws-restaurant-reviews-app.git"
+  },
+  "author": "John Ayeni",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/johnayeni/mws-restaurant-reviews-app/issues"
+  },
+  "homepage": "https://github.com/johnayeni/mws-restaurant-reviews-app#readme"
+}
