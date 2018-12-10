@@ -2,8 +2,10 @@
   "name": "mws-restaurant-reviews-app",
   "version": "1.0.0",
   "description": "1. In this folder, start up a simple HTTP server to serve up the site files on your local computer. Python has some simple tools to do this, and you don't even need to know Python. For most people, it's already installed on your computer.",
-  "main": "gulp.js",
+  "main": "gulpfile.js",
   "scripts": {
+    "start": "gulp",
+    "build": "gulp dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +17,21 @@
   "bugs": {
     "url": "https://github.com/johnayeni/mws-restaurant-reviews-app/issues"
   },
-  "homepage": "https://github.com/johnayeni/mws-restaurant-reviews-app#readme"
+  "homepage": "https://github.com/johnayeni/mws-restaurant-reviews-app#readme",
+  "devDependencies": {
+    "browser-sync": "^2.26.3",
+    "gulp": "^4.0.0",
+    "gulp-autoprefixer": "^6.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-imagemin": "^5.0.3",
+    "gulp-jasmine-phantom": "^3.0.0",
+    "gulp-load-plugins": "^1.5.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-uglify": "^3.0.1",
+    "imagemin-mozjpeg": "^8.0.0"
+  },
+  "dependencies": {
+    "gulp-sourcemaps": "^2.6.4",
+    "idb": "^2.1.3"
+  }
 }
