@@ -8,6 +8,7 @@ const imageminMozjpeg = require('imagemin-mozjpeg');
 const imageResize = require('gulp-image-resize');
 const rename = require('gulp-rename');
 const clean = require('gulp-clean');
+const connect = require('gulp-connect');
 
 const reload = browserSync.reload;
 
@@ -78,26 +79,36 @@ gulp.task(
     });
 
     gulp.watch('./app/sass/**/*.scss', gulp.series(['styles']));
-    gulp.watch('./app/**/**.html').on('change', reload);
-    gulp.watch('./app/**/**.json').on('change', reload);
+    gulp.watch('./app/**/*.html').on('change', reload);
+    gulp.watch('./app/**/*.json').on('change', reload);
     gulp
       .watch(['./app/sw.js', './app/scripts/**/*.js'], gulp.series(['scripts']))
       .on('change', reload);
   }),
 );
 
+gulp.task('serve:dist', () =>
+  connect.server({
+    port: 8080,
+    root: 'dist',
+  }),
+);
+
 // copy files to dist folder
-gulp.task('copy-files', () =>
-  gulp
-    .src([
-      'app/**/ *.html',
-      'app/**/*.json',
-      'app/img/*',
-      'app/css/**/*.css',
-      'app/js/**/*.js',
-      'app/sw.js',
-    ])
-    .pipe(gulp.dest('./dist')),
+gulp.task('copy-images', () => gulp.src('app/img/*').pipe(gulp.dest('./dist/img')));
+
+gulp.task('copy-css', () => gulp.src('app/css/**/*.css').pipe(gulp.dest('./dist/css')));
+
+gulp.task('copy-js', () => gulp.src('app/js/**/*.js').pipe(gulp.dest('./dist/js')));
+
+gulp.task(
+  'copy-files',
+  gulp.series([
+    'copy-images',
+    'copy-js',
+    'copy-css',
+    () => gulp.src(['app/**/*.html', 'app/**/*.json', 'app/sw.js']).pipe(gulp.dest('./dist')),
+  ]),
 );
 
 // clean folders
@@ -109,7 +120,16 @@ gulp.task('clean:dist', () => gulp.src('./dist', { read: false, allowEmpty: true
 
 gulp.task(
   'dist',
-  gulp.series(['clean:dist', 'imageResize', 'imagemin', 'styles', 'scripts', 'copy-files']),
+  gulp.series([
+    'clean',
+    'clean:dist',
+    'imageResize',
+    'imagemin',
+    'styles',
+    'scripts',
+    'copy-files',
+    'serve:dist',
+  ]),
 );
 
 gulp.task(

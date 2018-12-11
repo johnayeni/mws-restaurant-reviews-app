@@ -1,5 +1,4 @@
 tmp
-dist
 app/img/
 app/js/
 app/css/
@@ -41,7 +40,6 @@ build/Release
 
 # Dependency directories
 node_modules/
-images/
 dist/
 jspm_packages/
 

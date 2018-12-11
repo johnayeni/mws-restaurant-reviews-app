@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.2.0",
+    "gulp-connect": "^5.7.0",
     "idb": "^2.1.3"
   }
 }

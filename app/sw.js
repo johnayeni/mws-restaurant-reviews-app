@@ -2,7 +2,14 @@ const staticCacheName = 'restaurant-reviews-static-v1';
 const contentImgsCache = 'restaurant-reviews-imgs';
 const allCaches = [staticCacheName, contentImgsCache];
 
-const urlsToCache = ['/', 'index.html', 'restaurant.html', 'css/styles.css', 'js/bundle.js'];
+const urlsToCache = [
+  '/',
+  'index.html',
+  'restaurant.html',
+  'css/styles.css',
+  'js/bundle.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css',
+];
 
 self.addEventListener('install', (event) => {
   // Perform install steps

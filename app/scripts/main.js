@@ -209,6 +209,7 @@ const createRestaurantHTML = (restaurant) => {
       800px`;
   image.src = `${imageUrl}-800w.jpg`;
   image.alt = `${restaurant.name} restaurant's photo.`;
+
   li.append(image);
 
   const name = document.createElement('h2');

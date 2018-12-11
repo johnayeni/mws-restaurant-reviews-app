@@ -71,7 +71,6 @@ const fillRestaurantHTML = (data = restaurant) => {
       800px`;
   image.src = `${imageUrl}-800w.jpg`;
   image.alt = `${data.name} restaurant's photo.`;
-
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = data.cuisine_type;
 
