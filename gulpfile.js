@@ -76,6 +76,7 @@ gulp.task(
   gulp.series(['styles'], () => {
     browserSync.init({
       server: './app',
+      port: 3000,
     });
 
     gulp.watch('./app/sass/**/*.scss', gulp.series(['styles']));
