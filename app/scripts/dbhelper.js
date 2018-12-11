@@ -100,7 +100,6 @@ class DBHelper {
    */
   static async fetchRestaurantById(id, callback) {
     let restaurant = await DBHelper.getStoredRestaurantById(Number(id));
-    console.log(restaurant);
     // if we have data to show then we pass it immediately.
     if (restaurant) {
       callback(null, restaurant);

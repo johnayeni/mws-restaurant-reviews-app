@@ -8,7 +8,7 @@ const numSteps = 20.0;
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
   setIntersectObservers();
   setEventListeners();
   fetchNeighborhoods();
@@ -20,14 +20,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
  */
 const setEventListeners = () => {
   const neighborHoodSelect = document.getElementById('neighborhoods-select');
-  neighborHoodSelect.addEventListener('change', function() {
-    updateRestaurants();
-  });
+  neighborHoodSelect &&
+    neighborHoodSelect.addEventListener('change', () => {
+      updateRestaurants();
+    });
 
   const cuisineSelect = document.getElementById('cuisines-select');
-  cuisineSelect.addEventListener('change', function() {
-    updateRestaurants();
-  });
+  cuisineSelect &&
+    cuisineSelect.addEventListener('change', () => {
+      updateRestaurants();
+    });
 };
 
 const setIntersectObservers = () => {
@@ -82,15 +84,16 @@ const fetchNeighborhoods = () => {
 const fillNeighborhoodsHTML = (data = neighborhoods) => {
   const select = document.getElementById('neighborhoods-select');
 
-  data.forEach((neighborhood, i) => {
-    const option = document.createElement('option');
-    option.innerHTML = neighborhood;
-    option.value = neighborhood;
-    option.setAttribute('role', 'option');
-    option.setAttribute('aria-posinset', i + 1);
-    option.setAttribute('aria-setsize', data.length);
-    select.append(option);
-  });
+  select &&
+    data.forEach((neighborhood, i) => {
+      const option = document.createElement('option');
+      option.innerHTML = neighborhood;
+      option.value = neighborhood;
+      option.setAttribute('role', 'option');
+      option.setAttribute('aria-posinset', i + 1);
+      option.setAttribute('aria-setsize', data.length);
+      select.append(option);
+    });
 };
 
 /**
@@ -114,15 +117,16 @@ const fetchCuisines = () => {
 const fillCuisinesHTML = (data = cuisines) => {
   const select = document.getElementById('cuisines-select');
 
-  data.forEach((cuisine, i) => {
-    const option = document.createElement('option');
-    option.innerHTML = cuisine;
-    option.value = cuisine;
-    option.setAttribute('role', 'option');
-    option.setAttribute('aria-posinset', i + 1);
-    option.setAttribute('aria-setsize', cuisines.length);
-    select.append(option);
-  });
+  select &&
+    data.forEach((cuisine, i) => {
+      const option = document.createElement('option');
+      option.innerHTML = cuisine;
+      option.value = cuisine;
+      option.setAttribute('role', 'option');
+      option.setAttribute('aria-posinset', i + 1);
+      option.setAttribute('aria-setsize', cuisines.length);
+      select.append(option);
+    });
 };
 
 /**
