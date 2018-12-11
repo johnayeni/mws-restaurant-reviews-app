@@ -5,6 +5,9 @@ const browserSync = require('browser-sync').create();
 const sass = require('gulp-sass');
 const imagemin = require('gulp-imagemin');
 const imageminMozjpeg = require('imagemin-mozjpeg');
+const imageResize = require('gulp-image-resize');
+const rename = require('gulp-rename');
+const clean = require('gulp-clean');
 
 const reload = browserSync.reload;
 
@@ -49,6 +52,23 @@ gulp.task('imagemin', () =>
     .pipe(gulp.dest('./app/img')),
 );
 
+gulp.task('imageResize', () => {
+  const widths = [320, 480, 800];
+  let stream;
+  widths.forEach((width) => {
+    stream = gulp
+      .src('./app/images/**/*.*')
+      .pipe(imageResize({ width }))
+      .pipe(
+        rename((path) => {
+          path.basename += `-${width}w`;
+        }),
+      )
+      .pipe(gulp.dest('./app/img'));
+  });
+  return stream;
+});
+
 // serve files for development
 gulp.task(
   'serve',
@@ -80,6 +100,19 @@ gulp.task('copy-files', () =>
     .pipe(gulp.dest('./dist')),
 );
 
-gulp.task('dist', gulp.series(['imagemin', 'styles', 'scripts', 'copy-files']));
+// clean folders
+gulp.task('clean', () =>
+  gulp.src(['./app/img', './app/css', './app/js'], { read: false, allowEmpty: true }).pipe(clean()),
+);
 
-gulp.task('default', gulp.series(['imagemin', 'styles', 'scripts', 'serve']));
+gulp.task('clean:dist', () => gulp.src('./dist', { read: false, allowEmpty: true }).pipe(clean()));
+
+gulp.task(
+  'dist',
+  gulp.series(['clean:dist', 'imageResize', 'imagemin', 'styles', 'scripts', 'copy-files']),
+);
+
+gulp.task(
+  'default',
+  gulp.series(['clean', 'imageResize', 'imagemin', 'styles', 'scripts', 'serve']),
+);

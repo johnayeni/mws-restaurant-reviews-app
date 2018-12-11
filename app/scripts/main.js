@@ -197,13 +197,18 @@ const fillRestaurantsHTML = (data = restaurants) => {
  */
 const createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
-  li.className = 'post';
   li.setAttribute('role', 'listitem');
 
   const image = document.createElement('img');
+  const imageUrl = DBHelper.imageUrlForRestaurant(restaurant);
   image.className = 'restaurant-img';
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
-  image.alt = restaurant.name + " restaurant's photo.";
+  image.srcset = `${imageUrl}-320w.jpg 320w,
+  ${imageUrl}-480w.jpg 480w, ${imageUrl}-800w.jpg 800w`;
+  image.sizes = `(max-width: 320px) 280px,
+    (max-width: 480px) 440px,
+      800px`;
+  image.src = `${imageUrl}-800w.jpg`;
+  image.alt = `${restaurant.name} restaurant's photo.`;
   li.append(image);
 
   const name = document.createElement('h2');
