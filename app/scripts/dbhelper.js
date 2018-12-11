@@ -1,3 +1,4 @@
+import idb from 'idb';
 /**
  * Common database helper functions.
  */
@@ -20,7 +21,6 @@ class DBHelper {
       if (response.status === 200) {
         // Got a success response from server!
         const restaurants = await response.json();
-        console.log(restaurants);
         callback(null, restaurants);
       } else {
         callback('Could not fetch restaurants', null);
@@ -166,3 +166,5 @@ class DBHelper {
     return marker;
   }
 }
+
+export default DBHelper;

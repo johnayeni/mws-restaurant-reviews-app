@@ -2,15 +2,7 @@ const staticCacheName = 'restaurant-reviews-static-v1';
 const contentImgsCache = 'restaurant-reviews-imgs';
 const allCaches = [staticCacheName, contentImgsCache];
 
-const urlsToCache = [
-  '/',
-  'index.html',
-  'restaurant.html',
-  'css/styles.css',
-  'js/dbhelper.js',
-  'js/main.js',
-  'js/restaurant_info.js',
-];
+const urlsToCache = ['/', 'index.html', 'restaurant.html', 'css/styles.css', 'js/bundle.js'];
 
 self.addEventListener('install', (event) => {
   // Perform install steps

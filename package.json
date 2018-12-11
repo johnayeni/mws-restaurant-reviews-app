@@ -19,19 +19,27 @@
   },
   "homepage": "https://github.com/johnayeni/mws-restaurant-reviews-app#readme",
   "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/plugin-transform-arrow-functions": "^7.2.0",
+    "@babel/plugin-transform-regenerator": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
+    "babel-loader": "^8.0.4",
     "browser-sync": "^2.26.3",
+    "browserify": "^16.2.3",
     "gulp": "^4.0.0",
-    "gulp-autoprefixer": "^6.0.0",
+    "gulp-babel": "^8.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-imagemin": "^5.0.3",
-    "gulp-jasmine-phantom": "^3.0.0",
-    "gulp-load-plugins": "^1.5.0",
     "gulp-sass": "^4.0.2",
     "gulp-uglify": "^3.0.1",
-    "imagemin-mozjpeg": "^8.0.0"
+    "imagemin-mozjpeg": "^8.0.0",
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-stream": "^5.2.1"
   },
   "dependencies": {
-    "gulp-sourcemaps": "^2.6.4",
+    "@babel/runtime": "^7.2.0",
     "idb": "^2.1.3"
   }
 }
