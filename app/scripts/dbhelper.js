@@ -228,7 +228,18 @@ class DBHelper {
   static imageUrlForRestaurant(restaurant) {
     return `/img/${restaurant.photograph}`;
   }
-
+  /**
+   * Generate source set for image.
+   */
+  static imageSrcSetForRestaurant(imageUrl) {
+    return `${imageUrl}-320w.jpg 320w, ${imageUrl}-480w.jpg 480w, ${imageUrl}-800w.jpg 800w`;
+  }
+  /**
+   * Generate source sizes for image.
+   */
+  static imageSizesForRestaurant() {
+    return '(max-width: 320px) 280px, (max-width: 480px) 440px, 800px';
+  }
   /**
    * Map marker for a restaurant.
    */
