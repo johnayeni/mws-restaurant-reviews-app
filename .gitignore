@@ -1,7 +1,6 @@
-tmp
-app/img/
-app/js/
-app/css/
+src/img/
+src/js/
+src/css/
 # Logs
 logs
 *.log
