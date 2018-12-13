@@ -15,29 +15,29 @@ const reload = browserSync.reload;
 // complie sass files to css
 gulp.task('styles', () =>
   gulp
-    .src('./app/sass/**/*.scss')
+    .src('./src/sass/**/*.scss')
     .pipe(
       sass({
         outputStyle: 'compressed',
       }).on('error', sass.logError),
     )
-    .pipe(gulp.dest('./app/css'))
+    .pipe(gulp.dest('./src/css'))
     .pipe(browserSync.stream()),
 );
 
 // bundle scripts with webpack
 gulp.task('scripts', () =>
   gulp
-    .src('./app/scripts/**/*.js')
+    .src('./src/scripts/**/*.js')
     .pipe(webpack(require('./webpack.config.js')))
     .pipe(uglify())
-    .pipe(gulp.dest('./app/js')),
+    .pipe(gulp.dest('./src/js')),
 );
 
 // optimize images
 gulp.task('imagemin', () =>
   gulp
-    .src('./app/img/**/*.*')
+    .src('./src/img/**/*.*')
     .pipe(
       imagemin(
         [
@@ -50,7 +50,7 @@ gulp.task('imagemin', () =>
         },
       ),
     )
-    .pipe(gulp.dest('./app/img')),
+    .pipe(gulp.dest('./src/img')),
 );
 
 gulp.task('imageResize', () => {
@@ -58,14 +58,14 @@ gulp.task('imageResize', () => {
   let stream;
   widths.forEach((width) => {
     stream = gulp
-      .src('./app/images/**/*.*')
+      .src('./src/images/**/*.*')
       .pipe(imageResize({ width }))
       .pipe(
         rename((path) => {
           path.basename += `-${width}w`;
         }),
       )
-      .pipe(gulp.dest('./app/img'));
+      .pipe(gulp.dest('./src/img'));
   });
   return stream;
 });
@@ -75,15 +75,15 @@ gulp.task(
   'serve',
   gulp.series(['styles'], () => {
     browserSync.init({
-      server: './app',
+      server: './src',
       port: 3000,
     });
 
-    gulp.watch('./app/sass/**/*.scss', gulp.series(['styles']));
-    gulp.watch('./app/**/*.html').on('change', reload);
-    gulp.watch('./app/**/*.json').on('change', reload);
+    gulp.watch('./src/sass/**/*.scss', gulp.series(['styles']));
+    gulp.watch('./src/**/*.html').on('change', reload);
+    gulp.watch('./src/**/*.json').on('change', reload);
     gulp
-      .watch(['./app/sw.js', './app/scripts/**/*.js'], gulp.series(['scripts']))
+      .watch(['./src/sw.js', './src/scripts/**/*.js'], gulp.series(['scripts']))
       .on('change', reload);
   }),
 );
@@ -96,25 +96,28 @@ gulp.task('serve:dist', () =>
 );
 
 // copy files to dist folder
-gulp.task('copy-images', () => gulp.src('app/img/*').pipe(gulp.dest('./dist/img')));
+gulp.task('copy-images', () => gulp.src('./src/img/*').pipe(gulp.dest('./dist/img')));
 
-gulp.task('copy-css', () => gulp.src('app/css/**/*.css').pipe(gulp.dest('./dist/css')));
+gulp.task('copy-icons', () => gulp.src('./src/icons/*').pipe(gulp.dest('./dist/icons')));
 
-gulp.task('copy-js', () => gulp.src('app/js/**/*.js').pipe(gulp.dest('./dist/js')));
+gulp.task('copy-css', () => gulp.src('./src/css/**/*.css').pipe(gulp.dest('./dist/css')));
+
+gulp.task('copy-js', () => gulp.src('./src/js/**/*.js').pipe(gulp.dest('./dist/js')));
 
 gulp.task(
   'copy-files',
   gulp.series([
     'copy-images',
+    'copy-icons',
     'copy-js',
     'copy-css',
-    () => gulp.src(['app/**/*.html', 'app/**/*.json', 'app/sw.js']).pipe(gulp.dest('./dist')),
+    () => gulp.src(['./src/**/*.html', './src/**/*.json', './src/sw.js']).pipe(gulp.dest('./dist')),
   ]),
 );
 
 // clean folders
 gulp.task('clean', () =>
-  gulp.src(['./app/img', './app/css', './app/js'], { read: false, allowEmpty: true }).pipe(clean()),
+  gulp.src(['./src/img', './src/css', './src/js'], { read: false, allowEmpty: true }).pipe(clean()),
 );
 
 gulp.task('clean:dist', () => gulp.src('./dist', { read: false, allowEmpty: true }).pipe(clean()));
