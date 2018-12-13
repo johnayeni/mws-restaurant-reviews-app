@@ -35,35 +35,33 @@ gulp.task('scripts', () =>
 );
 
 // optimize images
-gulp.task('imagemin', () =>
-  gulp
-    .src('./src/img/**/*.*')
-    .pipe(
-      imagemin(
-        [
-          imageminMozjpeg({
-            quality: 50,
-          }),
-        ],
-        {
-          verbose: true,
-        },
-      ),
-    )
-    .pipe(gulp.dest('./src/img')),
-);
-
-gulp.task('imageResize', () => {
-  const widths = [320, 480, 800];
+gulp.task('images', () => {
+  const sizes = [
+    { width: 320, quality: 40 },
+    { width: 480, quality: 60 },
+    { width: 800, quality: 80 },
+  ];
   let stream;
-  widths.forEach((width) => {
+  sizes.forEach((size) => {
     stream = gulp
       .src('./src/images/**/*.*')
-      .pipe(imageResize({ width }))
+      .pipe(imageResize({ width: size.width }))
       .pipe(
         rename((path) => {
-          path.basename += `-${width}w`;
+          path.basename += `-${size.width}w`;
         }),
+      )
+      .pipe(
+        imagemin(
+          [
+            imageminMozjpeg({
+              quality: size.quality,
+            }),
+          ],
+          {
+            verbose: true,
+          },
+        ),
       )
       .pipe(gulp.dest('./src/img'));
   });
@@ -124,19 +122,7 @@ gulp.task('clean:dist', () => gulp.src('./dist', { read: false, allowEmpty: true
 
 gulp.task(
   'dist',
-  gulp.series([
-    'clean',
-    'clean:dist',
-    'imageResize',
-    'imagemin',
-    'styles',
-    'scripts',
-    'copy-files',
-    'serve:dist',
-  ]),
+  gulp.series(['clean', 'clean:dist', 'images', 'styles', 'scripts', 'copy-files', 'serve:dist']),
 );
 
-gulp.task(
-  'default',
-  gulp.series(['clean', 'imageResize', 'imagemin', 'styles', 'scripts', 'serve']),
-);
+gulp.task('default', gulp.series(['clean', 'images', 'styles', 'scripts', 'serve']));
