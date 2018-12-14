@@ -13,37 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setEventListeners();
   fetchNeighborhoods();
   fetchCuisines();
-  lazyLoadImages();
 });
-
-/**
- * Lazy load images.
- */
-const lazyLoadImages = () => {
-  let lazyImages = [].slice.call(document.querySelectorAll('img.lazy'));
-
-  if (
-    'IntersectionObserver' in window &&
-    'IntersectionObserverEntry' in window &&
-    'intersectionRatio' in window.IntersectionObserverEntry.prototype
-  ) {
-    let lazyImageObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          let lazyImage = entry.target;
-          lazyImage.src = lazyImage.dataset.src;
-          lazyImage.srcset = lazyImage.dataset.srcset;
-          lazyImage.classList.remove('lazy');
-          lazyImageObserver.unobserve(lazyImage);
-        }
-      });
-    });
-
-    lazyImages.forEach((lazyImage) => {
-      lazyImageObserver.observe(lazyImage);
-    });
-  }
-};
 /**
  * Set event listeners for filter changing
  */
@@ -223,6 +193,8 @@ const fillRestaurantsHTML = (data = restaurants) => {
     ul.append(createRestaurantHTML(restaurant));
   });
   addMarkersToMap();
+  // lazy load images for each restaurant
+  DBHelper.lazyLoadImages();
 };
 
 /**

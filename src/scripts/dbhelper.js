@@ -253,6 +253,35 @@ class DBHelper {
     });
     return marker;
   }
+  /**
+   * Lazy load images.
+   */
+  static lazyLoadImages() {
+    let lazyImages = [].slice.call(document.querySelectorAll('img.lazy'));
+
+    if (
+      'IntersectionObserver' in window &&
+      'IntersectionObserverEntry' in window &&
+      'intersectionRatio' in window.IntersectionObserverEntry.prototype
+    ) {
+      let lazyImageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            let lazyImage = entry.target;
+            lazyImage.src = lazyImage.dataset.src;
+            lazyImage.srcset = lazyImage.dataset.srcset;
+            lazyImage.sizes = lazyImage.dataset.sizes;
+            lazyImage.classList.remove('lazy');
+            lazyImageObserver.unobserve(lazyImage);
+          }
+        });
+      });
+
+      lazyImages.forEach((lazyImage) => {
+        lazyImageObserver.observe(lazyImage);
+      });
+    }
+  }
 }
 
 export default DBHelper;

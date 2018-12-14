@@ -46,6 +46,8 @@ const fetchRestaurantFromURL = (callback) => {
         return;
       }
       fillRestaurantHTML();
+      // lazy load images for each restaurant
+      DBHelper.lazyLoadImages();
       callback(null, data);
     });
   }
