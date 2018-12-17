@@ -66,9 +66,9 @@ const fillRestaurantHTML = (data = restaurant) => {
   const image = document.getElementById('restaurant-img');
   const imageUrl = DBHelper.imageUrlForRestaurant(restaurant);
   image.className = 'lazy restaurant-img';
-  image.srcset = DBHelper.imageSrcSetForRestaurant(imageUrl);
+  image.setAttribute('data-src', `${imageUrl}-large.jpg`);
+  image.setAttribute('data-srcset', DBHelper.imageSrcSetForRestaurant(imageUrl));
   image.sizes = DBHelper.imageSizesForRestaurant();
-  image.src = `${imageUrl}-800w.jpg`;
   image.alt = `${data.name} restaurant's photo.`;
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = data.cuisine_type;

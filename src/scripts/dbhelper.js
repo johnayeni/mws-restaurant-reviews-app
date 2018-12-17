@@ -232,7 +232,7 @@ class DBHelper {
    * Generate source set for image.
    */
   static imageSrcSetForRestaurant(imageUrl) {
-    return `${imageUrl}-320w.jpg 320w, ${imageUrl}-480w.jpg 480w, ${imageUrl}-800w.jpg 800w`;
+    return `${imageUrl}-small.jpg 320w, ${imageUrl}-medium.jpg 480w, ${imageUrl}-large.jpg 800w`;
   }
   /**
    * Generate source sizes for image.
@@ -270,7 +270,6 @@ class DBHelper {
             let lazyImage = entry.target;
             lazyImage.src = lazyImage.dataset.src;
             lazyImage.srcset = lazyImage.dataset.srcset;
-            lazyImage.sizes = lazyImage.dataset.sizes;
             lazyImage.classList.remove('lazy');
             lazyImageObserver.unobserve(lazyImage);
           }

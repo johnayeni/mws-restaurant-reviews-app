@@ -37,9 +37,9 @@ gulp.task('scripts', () =>
 // optimize images
 gulp.task('images', () => {
   const sizes = [
-    { width: 320, quality: 40 },
-    { width: 480, quality: 60 },
-    { width: 800, quality: 80 },
+    { width: 320, quality: 40, suffix: 'small' },
+    { width: 480, quality: 60, suffix: 'medium' },
+    { width: 800, quality: 80, suffix: 'large' },
   ];
   let stream;
   sizes.forEach((size) => {
@@ -48,7 +48,7 @@ gulp.task('images', () => {
       .pipe(imageResize({ width: size.width }))
       .pipe(
         rename((path) => {
-          path.basename += `-${size.width}w`;
+          path.basename += `-${size.suffix}`;
         }),
       )
       .pipe(

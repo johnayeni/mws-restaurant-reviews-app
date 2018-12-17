@@ -3,13 +3,10 @@ import DBHelper from './dbhelper';
 let restaurants, neighborhoods, cuisines;
 let map;
 let markers = [];
-let observer;
-const numSteps = 20.0;
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  setIntersectObservers();
   setEventListeners();
   fetchNeighborhoods();
   fetchCuisines();
@@ -29,37 +26,6 @@ const setEventListeners = () => {
     cuisineSelect.addEventListener('change', () => {
       updateRestaurants();
     });
-};
-
-const setIntersectObservers = () => {
-  const options = {
-    root: document.querySelector('#scrollArea'),
-    rootMargin: '0px',
-    threshold: buildThresholdList(),
-  };
-
-  observer = new IntersectionObserver(handleIntersect, options);
-};
-
-const buildThresholdList = () => {
-  const thresholds = [];
-
-  for (let i = 1.0; i <= numSteps; i++) {
-    const ratio = i / numSteps;
-    thresholds.push(ratio);
-  }
-
-  thresholds.push(0);
-  return thresholds;
-};
-
-const handleIntersect = (entries, observer) => {
-  entries.forEach((entry) => {
-    if (entry.intersectionRatio > 0.25) {
-      entry.target.classList.remove('hidden');
-      entry.target.classList.add('show');
-    }
-  });
 };
 
 /**
@@ -207,9 +173,9 @@ const createRestaurantHTML = (restaurant) => {
   const image = document.createElement('img');
   const imageUrl = DBHelper.imageUrlForRestaurant(restaurant);
   image.className = 'lazy restaurant-img';
-  image.srcset = DBHelper.imageSrcSetForRestaurant(imageUrl);
+  image.setAttribute('data-src', `${imageUrl}-large.jpg`);
+  image.setAttribute('data-srcset', DBHelper.imageSrcSetForRestaurant(imageUrl));
   image.sizes = DBHelper.imageSizesForRestaurant();
-  image.src = `${imageUrl}-800w.jpg`;
   image.alt = `${restaurant.name} restaurant's photo.`;
 
   li.append(image);
@@ -233,9 +199,6 @@ const createRestaurantHTML = (restaurant) => {
   more.href = DBHelper.urlForRestaurant(restaurant);
   more.setAttribute('aria-label', `View details of ${restaurant.name}'s restaurant`);
   li.append(more);
-  li.classList.add('hidden');
-
-  observer.observe(li);
   return li;
 };
 
