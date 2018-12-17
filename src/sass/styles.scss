@@ -311,6 +311,10 @@ nav {
   }
 }
 
+#reviews-container {
+  padding: 20px 0;
+}
+
 #reviews-list {
   margin: 0;
   padding: 0;
@@ -319,16 +323,22 @@ nav {
   align-items: center;
   li {
     background-color: #fff;
-    border: 2px solid #f3f3f3;
+    border: 2px solid #f5f5f5;
     display: block;
     list-style-type: none;
     overflow: hidden;
-    padding: 0 20px 20px;
+    padding: 20px;
     position: relative;
-    width: 85%;
-  }
-  li p {
-    margin: 0 0 10px;
+    width: 90%;
+    p {
+      margin: 10px;
+      text-align: justify;
+    }
+    h3 {
+      .star-icon {
+        color: #fafa17;
+      }
+    }
   }
 }
 

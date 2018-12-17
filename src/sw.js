@@ -40,6 +40,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
+  if (requestUrl.origin.startsWith('https://maps.googleapis.com')) {
+    return;
+  }
+
   if (requestUrl.pathname.startsWith('/restaurants')) {
     return;
   }

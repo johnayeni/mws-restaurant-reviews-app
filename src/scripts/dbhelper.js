@@ -10,7 +10,21 @@ class DBHelper {
    */
   static openDatabase() {
     return idb.open('restaurants', 1, (upgradeDb) => {
-      upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
+      switch (upgradeDb.oldVersion) {
+        case 0:
+          upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
+        case 1:
+          const reviewStore = upgradeDb.createObjectStore('reviews', { keyPath: 'id' });
+          reviewStore.createIndex('restaurant_id', 'restaurant_id');
+        case 2:
+          upgradeDb.createObjectStore('syncFavorites', { keyPath: 'restaurant_id' });
+        case 3:
+          const offlineReviewStore = upgradeDb.createObjectStore('offlineReviews', {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          offlineReviewStore.createIndex('restaurant_id', 'restaurant_id');
+      }
     });
   }
   /**
@@ -19,7 +33,7 @@ class DBHelper {
    */
   static get DATABASE_URL() {
     const port = 1337; // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${port}`;
   }
   /**
    * Show cached restaurants stored in IDB
@@ -50,6 +64,20 @@ class DBHelper {
     return store.get(id);
   }
 
+  static async getStoredRestaurantReviews(id) {
+    dbPromise = DBHelper.openDatabase();
+    const db = await dbPromise;
+    //if we showing posts or very first time of the page loading.
+    //we don't need to go to idb
+    if (!db) return;
+
+    const tx = db.transaction('reviews');
+    const store = tx.objectStore('reviews');
+    const index = store.index('restaurant_id');
+
+    return index.getAll(id);
+  }
+
   /**
    * Fetch all restaurants.
    */
@@ -63,7 +91,7 @@ class DBHelper {
 
     try {
       // fetch from the network
-      const response = await fetch(DBHelper.DATABASE_URL);
+      const response = await fetch(`${DBHelper.DATABASE_URL}/restaurants`);
       if (response.status === 200) {
         // Got a success response from server!
         restaurants = await response.json();
@@ -105,7 +133,7 @@ class DBHelper {
       callback(null, restaurant);
     }
     try {
-      const response = await fetch(`${DBHelper.DATABASE_URL}/${id}`);
+      const response = await fetch(`${DBHelper.DATABASE_URL}/restaurants/${id}`);
       if (response.status === 200) {
         // Got a success response from server!
         const restaurant = await response.json();
@@ -119,6 +147,34 @@ class DBHelper {
         callback(null, restaurant);
       } else {
         callback('Restaurant does not exist', null);
+      }
+    } catch (error) {
+      callback(error, null);
+    }
+  }
+  /**
+   * Fetch a restaurant reviews by its ID.
+   */
+  static async fetchRestaurantReviews(id, callback) {
+    let reviews = await DBHelper.getStoredRestaurantReviews(Number(id));
+    // if we have data to show then we pass it immediately.
+    if (reviews) {
+      callback(null, reviews);
+    }
+    try {
+      const response = await fetch(`${DBHelper.DATABASE_URL}/reviews/?restaurant_id=${id}`);
+      if (response.status === 200) {
+        // Got a success response from server!
+        const reviews = await response.json();
+        const db = await dbPromise;
+        if (!db) return;
+        const tx = db.transaction('reviews', 'readwrite');
+        const store = tx.objectStore('reviews');
+        reviews.forEach((review) => store.put(review));
+        // update webpage with new data
+        callback(null, reviews);
+      } else {
+        callback('Could not fetch reviews', null);
       }
     } catch (error) {
       callback(error, null);
