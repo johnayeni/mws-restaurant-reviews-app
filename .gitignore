@@ -1,6 +1,7 @@
 src/img/
 src/js/
 src/css/
+sw.js
 # Logs
 logs
 *.log

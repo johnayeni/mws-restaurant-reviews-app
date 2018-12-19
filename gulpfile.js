@@ -34,6 +34,30 @@ gulp.task('scripts', () =>
     .pipe(gulp.dest('./src/js')),
 );
 
+// bundle service worker file with webpack
+gulp.task('service-worker', () =>
+  gulp
+    .src('./src/service-worker.js')
+    .pipe(
+      webpack({
+        mode: 'production',
+        output: {
+          filename: 'sw.js',
+        },
+        module: {
+          rules: [
+            {
+              test: /\.js$/,
+              use: ['babel-loader'],
+            },
+          ],
+        },
+      }),
+    )
+    .pipe(uglify())
+    .pipe(gulp.dest('./src')),
+);
+
 // optimize images
 gulp.task('images', () => {
   const sizes = [
@@ -78,11 +102,10 @@ gulp.task(
     });
 
     gulp.watch('./src/sass/**/*.scss', gulp.series(['styles']));
-    gulp.watch('./src/**/*.html').on('change', reload);
-    gulp.watch('./src/**/*.json').on('change', reload);
-    gulp
-      .watch(['./src/sw.js', './src/scripts/**/*.js'], gulp.series(['scripts']))
-      .on('change', reload);
+    gulp.watch('./src/*.html').on('change', reload);
+    gulp.watch('./src/*.json').on('change', reload);
+    gulp.watch('./src/service-worker.js', gulp.series(['service-worker'])).on('change', reload);
+    gulp.watch('./src/scripts/**/*.js', gulp.series(['scripts'])).on('change', reload);
   }),
 );
 
@@ -109,20 +132,34 @@ gulp.task(
     'copy-icons',
     'copy-js',
     'copy-css',
-    () => gulp.src(['./src/**/*.html', './src/**/*.json', './src/sw.js']).pipe(gulp.dest('./dist')),
+    () => gulp.src(['./src/*.html', './src/*.json', './src/sw.js']).pipe(gulp.dest('./dist')),
   ]),
 );
 
 // clean folders
 gulp.task('clean', () =>
-  gulp.src(['./src/img', './src/css', './src/js'], { read: false, allowEmpty: true }).pipe(clean()),
+  gulp
+    .src(['./src/img', './src/css', './src/js', './src/sw.js'], { read: false, allowEmpty: true })
+    .pipe(clean()),
 );
 
 gulp.task('clean:dist', () => gulp.src('./dist', { read: false, allowEmpty: true }).pipe(clean()));
 
 gulp.task(
   'dist',
-  gulp.series(['clean', 'clean:dist', 'images', 'styles', 'scripts', 'copy-files', 'serve:dist']),
+  gulp.series([
+    'clean',
+    'clean:dist',
+    'images',
+    'styles',
+    'service-worker',
+    'scripts',
+    'copy-files',
+    'serve:dist',
+  ]),
 );
 
-gulp.task('default', gulp.series(['clean', 'images', 'styles', 'scripts', 'serve']));
+gulp.task(
+  'default',
+  gulp.series(['clean', 'images', 'service-worker', 'styles', 'scripts', 'serve']),
+);
