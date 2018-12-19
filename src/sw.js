@@ -62,6 +62,14 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+self.addEventListener('sync', (event) => {
+  self.registration.showNotification('Sync event fired!');
+  // if (event.tag == 'SyncReviews') {
+  //   console.log('sync reviews');
+  //   // event.waitUntil(console.log('sync reviews'));
+  // }
+});
+
 function servePhoto(request) {
   const storageUrl = request.url;
 

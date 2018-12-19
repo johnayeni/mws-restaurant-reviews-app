@@ -1,7 +1,5 @@
 import DBHelper from './dbhelper';
 
-let dbPromise;
+class SyncHelper {}
 
-class syncHelper {
-  
-}
+export default SyncHelper;

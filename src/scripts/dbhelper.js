@@ -2,29 +2,23 @@ import idb from 'idb';
 /**
  * Common database helper functions.
  */
-let dbPromise;
-
 class DBHelper {
   /**
    * Open a IDB Database
    */
   static openDatabase() {
     return idb.open('restaurants', 1, (upgradeDb) => {
-      switch (upgradeDb.oldVersion) {
-        case 0:
-          upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
-        case 1:
-          const reviewStore = upgradeDb.createObjectStore('reviews', { keyPath: 'id' });
-          reviewStore.createIndex('restaurant_id', 'restaurant_id');
-        case 2:
-          upgradeDb.createObjectStore('syncFavorites', { keyPath: 'restaurant_id' });
-        case 3:
-          const offlineReviewStore = upgradeDb.createObjectStore('offlineReviews', {
-            keyPath: 'id',
-            autoIncrement: true,
-          });
-          offlineReviewStore.createIndex('restaurant_id', 'restaurant_id');
-      }
+      upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
+      const reviewStore = upgradeDb.createObjectStore('reviews', { keyPath: 'id' });
+      reviewStore.createIndex('restaurant_id', 'restaurant_id');
+      reviewStore.createIndex('date', 'createdAt');
+      upgradeDb.createObjectStore('offlineFavorites', { keyPath: 'restaurant_id' });
+      const offlineReviewStore = upgradeDb.createObjectStore('offlineReviews', {
+        keyPath: 'id',
+        autoIncrement: true,
+      });
+      offlineReviewStore.createIndex('restaurant_id', 'restaurant_id');
+      offlineReviewStore.createIndex('date', 'createdAt');
     });
   }
   /**
@@ -39,8 +33,7 @@ class DBHelper {
    * Show cached restaurants stored in IDB
    */
   static async getStoredRestaurants() {
-    dbPromise = DBHelper.openDatabase();
-    const db = await dbPromise;
+    const db = await DBHelper.openDatabase();
     //if we showing posts or very first time of the page loading.
     //we don't need to go to idb
     if (!db) return;
@@ -52,8 +45,7 @@ class DBHelper {
   }
 
   static async getStoredRestaurantById(id) {
-    dbPromise = DBHelper.openDatabase();
-    const db = await dbPromise;
+    const db = await DBHelper.openDatabase();
     //if we showing posts or very first time of the page loading.
     //we don't need to go to idb
     if (!db) return;
@@ -65,15 +57,14 @@ class DBHelper {
   }
 
   static async getStoredRestaurantReviews(id) {
-    dbPromise = DBHelper.openDatabase();
-    const db = await dbPromise;
+    const db = await DBHelper.openDatabase();
     //if we showing posts or very first time of the page loading.
     //we don't need to go to idb
     if (!db) return;
 
     const tx = db.transaction('reviews');
     const store = tx.objectStore('reviews');
-    const index = store.index('restaurant_id');
+    const index = store.index('restaurant_id', 'date');
 
     return index.getAll(id);
   }
@@ -82,8 +73,9 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static async fetchRestaurants(callback) {
+    let restaurants = [];
     // get stored data from indexed db
-    let restaurants = await DBHelper.getStoredRestaurants();
+    if (navigator.serviceWorker) restaurants = await DBHelper.getStoredRestaurants();
     // if we have data to show then we pass it immediately.
     if (restaurants.length > 0) {
       callback(null, restaurants);
@@ -97,22 +89,7 @@ class DBHelper {
         restaurants = await response.json();
 
         // store data from network on indexed db
-        const db = await dbPromise;
-        if (!db) return;
-        const tx = db.transaction('restaurants', 'readwrite');
-        const store = tx.objectStore('restaurants');
-
-        restaurants.forEach((restaurant) => store.put(restaurant));
-
-        // limlit data stored in indexed db
-        store
-          .openCursor(null, 'prev')
-          .then((cursor) => cursor.advance(30))
-          .then(function deleteRest(cursor) {
-            if (!cursor) return;
-            cursor.delete();
-            return cursor.continue().then(deleteRest);
-          });
+        if (navigator.serviceWorker) DBHelper.addRestaurantsToIDB(restaurants);
         // update webpagw with new data
         callback(null, restaurants);
       } else {
@@ -127,7 +104,9 @@ class DBHelper {
    * Fetch a restaurant by its ID.
    */
   static async fetchRestaurantById(id, callback) {
-    let restaurant = await DBHelper.getStoredRestaurantById(Number(id));
+    let restaurant;
+    if (navigator.serviceWorker) restaurant = await DBHelper.getStoredRestaurantById(Number(id));
+
     // if we have data to show then we pass it immediately.
     if (restaurant) {
       callback(null, restaurant);
@@ -137,12 +116,8 @@ class DBHelper {
       if (response.status === 200) {
         // Got a success response from server!
         const restaurant = await response.json();
-        const db = await dbPromise;
-        if (!db) return;
-        const tx = db.transaction('restaurants', 'readwrite');
-        const store = tx.objectStore('restaurants');
-        // update restaurant on indexed db
-        store.put(restaurant);
+
+        if (navigator.serviceWorker) DBHelper.addRestaurantToIDB(restaurant);
         // update webpage with new data
         callback(null, restaurant);
       } else {
@@ -156,9 +131,19 @@ class DBHelper {
    * Fetch a restaurant reviews by its ID.
    */
   static async fetchRestaurantReviews(id, callback) {
-    let reviews = await DBHelper.getStoredRestaurantReviews(Number(id));
+    let reviews = [];
+    let storedReviews = [];
+    let offlineReviews = [];
+
+    if (navigator.serviceWorker) {
+      storedReviews = await DBHelper.getStoredRestaurantReviews(Number(id));
+      // get offline reviews that havent been synced
+      offlineReviews = await DBHelper.getOfflineReviews(Number(id));
+    }
+
+    reviews = [...(storedReviews && storedReviews), ...(offlineReviews && offlineReviews)];
     // if we have data to show then we pass it immediately.
-    if (reviews) {
+    if (reviews && reviews.length > 0) {
       callback(null, reviews);
     }
     try {
@@ -166,13 +151,9 @@ class DBHelper {
       if (response.status === 200) {
         // Got a success response from server!
         const reviews = await response.json();
-        const db = await dbPromise;
-        if (!db) return;
-        const tx = db.transaction('reviews', 'readwrite');
-        const store = tx.objectStore('reviews');
-        reviews.forEach((review) => store.put(review));
+        if (navigator.serviceWorker) DBHelper.addReviewsToIDB(reviews);
         // update webpage with new data
-        callback(null, reviews);
+        callback(null, [...reviews, ...(offlineReviews && offlineReviews)]);
       } else {
         callback('Could not fetch reviews', null);
       }
@@ -270,6 +251,134 @@ class DBHelper {
       }
     });
   }
+  /**
+   * Add restaurants to IDB.
+   */
+
+  static async addRestaurantsToIDB(restaurants) {
+    const db = await DBHelper.openDatabase();
+    if (!db) return;
+    const tx = db.transaction('restaurants', 'readwrite');
+    const store = tx.objectStore('restaurants');
+
+    restaurants.forEach((restaurant) => store.put(restaurant));
+
+    // limit data stored in indexed db
+    store
+      .openCursor(null, 'prev')
+      .then((cursor) => cursor.advance(30))
+      .then(function deleteRest(cursor) {
+        if (!cursor) return;
+        cursor.delete();
+        return cursor.continue().then(deleteRest);
+      });
+  }
+  /**
+   * Add a restaurant to IDB.
+   */
+
+  static async addRestaurantToIDB(restaurant) {
+    const db = await DBHelper.openDatabase();
+    if (!db) return;
+    const tx = db.transaction('restaurants', 'readwrite');
+    const store = tx.objectStore('restaurants');
+    // update restaurant on indexed db
+    store.put(restaurant);
+  }
+
+  /**
+   * Add reviews to IDB.
+   */
+
+  static async addReviewsToIDB(reviews) {
+    const db = await DBHelper.openDatabase();
+    if (!db) return;
+    const tx = db.transaction('reviews', 'readwrite');
+    const store = tx.objectStore('reviews');
+    reviews.forEach((review) => store.put(review));
+  }
+  /**
+   * Add offline review.
+   */
+  static async addOfflineReview(review, callback) {
+    try {
+      if (navigator.serviceWorker && window.SyncManager) {
+        const db = await DBHelper.openDatabase();
+        if (!db) return;
+        const tx = db.transaction('offlineReviews', 'readwrite');
+        const store = tx.objectStore('offlineReviews');
+        store.put({ ...review, offline: true });
+        callback(null, 'Adding Review...');
+        // Request for notification permission
+        if (Notification.permission !== 'granted') {
+          await DBHelper.requestNotificationPermission();
+        }
+        // register a sync
+        navigator.serviceWorker.ready
+          .then((reg) => {
+            return reg.sync.register('SyncReviews');
+          })
+          .catch((err) => console.log(err));
+      } else {
+        DBHelper.postReview(review, callback);
+      }
+    } catch (error) {
+      callback('Error adding review!', null);
+    }
+  }
+  /**
+   * Add offline review.
+   */
+  static async getOfflineReviews(id) {
+    const db = await DBHelper.openDatabase();
+    //if we showing posts or very first time of the page loading.
+    //we don't need to go to idb
+    if (!db) return;
+
+    const tx = db.transaction('offlineReviews');
+    const store = tx.objectStore('offlineReviews');
+    const index = store.index('restaurant_id', 'date');
+
+    return index.getAll(id);
+  }
+  /**
+   * Add a new review
+   */
+  static async postReview(data, callback) {
+    try {
+      const response = await fetch(`${DBHelper.DATABASE_URL}/reviews`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      if (response.status === 201) {
+        const responseData = await response.json();
+        callback(null, 'Review added');
+      }
+    } catch (error) {
+      callback('Error adding review', null);
+    }
+  }
+  /**
+   * Toggle a restaurants favourite status
+   */
+  static async toggleRestaurantFavoriteStatus(id, isFavourite) {
+    try {
+      const response = await fetch(
+        `${DBHelper.DATABASE_URL}/restaurants/${id}?is_favorite=${!isFavourite}`,
+        {
+          method: 'PUT',
+        },
+      );
+      console.log(response);
+      if (response.status === 200) {
+        const responseData = await response.json();
+        console.log(responseData);
+        // callback(null, responseData);
+      }
+    } catch (error) {
+      // callback(error, null);
+    }
+  }
 
   /**
    * Restaurant page URL.
@@ -336,6 +445,14 @@ class DBHelper {
         lazyImageObserver.observe(lazyImage);
       });
     }
+  }
+
+  static async requestNotificationPermission() {
+    const response = await Notification.requestPermission();
+    if (response === 'granted') {
+      return true;
+    }
+    return false;
   }
 }
 

@@ -17,7 +17,6 @@ if (window.location.pathname === '/restaurant.html') {
           center: data.latlng,
           scrollwheel: false,
         });
-        fillBreadcrumb();
         DBHelper.mapMarkerForRestaurant(restaurant, map);
       }
     });
@@ -28,11 +27,6 @@ if (window.location.pathname === '/restaurant.html') {
  * Get current restaurant from page URL.
  */
 const fetchRestaurantFromURL = (callback) => {
-  if (restaurant) {
-    // restaurant already fetched!
-    callback(null, restaurant);
-    return;
-  }
   const id = getParameterByName('id');
   if (!id) {
     // no id found in URL
@@ -40,11 +34,12 @@ const fetchRestaurantFromURL = (callback) => {
     callback(error, null);
   } else {
     DBHelper.fetchRestaurantById(id, (error, data) => {
-      restaurant = data;
       if (!data) {
         console.error(error);
         return;
       }
+      restaurant = data;
+      fillBreadcrumb();
       fillRestaurantHTML();
       // lazy load images for each restaurant
       DBHelper.lazyLoadImages();
@@ -55,9 +50,8 @@ const fetchRestaurantFromURL = (callback) => {
 /**
  * Get restaurant reviews from page URL.
  */
-const fetchRestaurantReviewsFromURL = (id) => {
+const fetchRestaurantReviews = (id) => {
   if (!id) {
-    // no id found in URL
     const error = 'No restaurant id';
     callback(error, null);
   } else {
@@ -66,7 +60,9 @@ const fetchRestaurantReviewsFromURL = (id) => {
         console.error(error);
         return;
       }
-      fillReviewsHTML(reviews);
+      fillReviewsHTML(reviews.reverse());
+      // create reviews from
+      createReviewFormHTML();
     });
   }
 };
@@ -80,6 +76,16 @@ const fillRestaurantHTML = (data = restaurant) => {
 
   const address = document.getElementById('restaurant-address');
   address.innerHTML = data.address;
+
+  const favoriteButton = document.querySelector('.favorite-button');
+  if (JSON.parse(restaurant.is_favorite)) {
+    favoriteButton.classList.add('favorited');
+  } else {
+    favoriteButton.classList.remove('favorited');
+  }
+  favoriteButton.addEventListener('click', () => {
+    DBHelper.toggleRestaurantFavoriteStatus(restaurant.id, JSON.parse(restaurant.is_favorite));
+  });
 
   const image = document.getElementById('restaurant-img');
   const imageUrl = DBHelper.imageUrlForRestaurant(restaurant);
@@ -96,7 +102,7 @@ const fillRestaurantHTML = (data = restaurant) => {
     fillRestaurantHoursHTML();
   }
   // fill reviews
-  fetchRestaurantReviewsFromURL(restaurant.id);
+  fetchRestaurantReviews(restaurant.id);
 };
 
 /**
@@ -161,6 +167,15 @@ const fillReviewsHTML = (reviews) => {
 const createReviewHTML = (review) => {
   const li = document.createElement('li');
   li.tabIndex = 0;
+
+  if (review.offline) {
+    li.className = 'offline-review';
+    const offlineText = document.createElement('p');
+    offlineText.className = 'offline-text';
+    offlineText.innerHTML = 'Adding Review ...';
+    li.appendChild(offlineText);
+  }
+
   const name = document.createElement('h3');
   name.innerHTML = review.name;
   li.appendChild(name);
@@ -186,14 +201,94 @@ const createReviewHTML = (review) => {
   return li;
 };
 
+const createReviewFormHTML = () => {
+  const section = document.getElementById('review-form-container');
+  while (section.hasChildNodes()) {
+    section.removeChild(section.lastChild);
+  }
+
+  const form = document.createElement('form');
+  form.setAttribute('id', 'review-form');
+  const title = document.createElement('h3');
+  title.innerHTML = 'Review Restaurant';
+  form.appendChild(title);
+
+  const nameInputDiv = document.createElement('div');
+  const nameInput = document.createElement('input');
+  nameInput.setAttribute('placeholder', 'Name');
+  nameInput.setAttribute('name', 'name');
+  nameInput.setAttribute('type', 'text');
+  nameInput.setAttribute('required', true);
+  nameInputDiv.appendChild(nameInput);
+
+  form.appendChild(nameInputDiv);
+
+  const radioInputDiv = document.createElement('div');
+
+  for (let i = 1; i <= 5; i++) {
+    const radioInput = document.createElement('input');
+    radioInput.setAttribute('value', i);
+    radioInput.setAttribute('type', 'radio');
+    radioInput.setAttribute('name', 'rating');
+    radioInput.setAttribute('required', true);
+    radioInputDiv.appendChild(radioInput);
+
+    for (let j = 0; j < i; j++) {
+      const star = document.createElement('span');
+      star.className = 'star-icon';
+      star.innerHTML = '&#9733;';
+      radioInputDiv.appendChild(star);
+    }
+  }
+
+  form.appendChild(radioInputDiv);
+  const commentTextAreaDiv = document.createElement('div');
+  const commentTextArea = document.createElement('textarea');
+  commentTextArea.setAttribute('placeholder', 'Comments');
+  commentTextArea.setAttribute('name', 'comments');
+  commentTextArea.setAttribute('rows', 4);
+  commentTextArea.setAttribute('required', true);
+  commentTextAreaDiv.appendChild(commentTextArea);
+
+  form.appendChild(commentTextAreaDiv);
+
+  const addButtonDiv = document.createElement('div');
+  const addButton = document.createElement('button');
+  addButton.setAttribute('type', 'submit');
+  addButton.setAttribute('aria-label', 'Add Review');
+  addButton.classList.add('review-form-button');
+  addButton.innerHTML = 'Add Review';
+  addButtonDiv.appendChild(addButton);
+  form.appendChild(addButtonDiv);
+
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      restaurant_id: restaurant.id,
+      name: form.name.value,
+      comments: form.comments.value,
+      rating: form.rating.value,
+      createdAt: new Date().toISOString(),
+    };
+    DBHelper.addOfflineReview(data, (error, response) => {
+      if (error) {
+        alert('Could not add review');
+        return;
+      }
+      alert(response);
+      fetchRestaurantReviews(restaurant.id);
+    });
+  };
+
+  section.appendChild(form);
+};
+
 /**
  * Add restaurant name to the breadcrumb navigation menu
  */
 const fillBreadcrumb = (data = restaurant) => {
-  const breadcrumb = document.getElementById('breadcrumb');
-  const li = document.createElement('li');
-  li.innerHTML = data.name;
-  breadcrumb.appendChild(li);
+  const breadcrumb = document.getElementById('page-breadcrumb');
+  breadcrumb.innerHTML = data.name;
 };
 
 /**

@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#FFFFFF" />
-    <link rel="icon" href="icons/icon-72x72.png" />
+    <link rel="star-icon" href="icons/star-icon-72x72.png" />
     <link rel="manifest" href="manifest.json" />
     <link
       rel="stylesheet"
@@ -21,11 +21,12 @@
     <header>
       <!-- Beginning nav -->
       <nav>
-        <h1><a href="/" aria-label="Link Restaurant Reviews">Restaurant Reviews</a></h1>
+        <h1><a href="/" aria-div="Link Restaurant Reviews">Restaurant Reviews</a></h1>
       </nav>
       <!-- Beginning breadcrumb -->
       <ul id="breadcrumb">
-        <li><a href="/" aria-label="Link Home">Home</a></li>
+        <li><a href="/" aria-div="Link Home">Home</a></li>
+        <li id="page-breadcrumb"></li>
       </ul>
       <!-- End breadcrumb -->
       <!-- End nav -->
@@ -44,10 +45,14 @@
           <img id="restaurant-img" alt="restaurant image" />
           <p id="restaurant-cuisine"></p>
           <p id="restaurant-address"></p>
+          <button class="favorite-button">&#10084;</button>
           <table id="restaurant-hours"></table>
         </section>
       </section>
       <!-- end restaurant -->
+      <!-- Create new review form -->
+      <section id="review-form-container"></section>
+      <!-- end of create new review form -->
       <!-- Beginning reviews -->
       <section id="reviews-container"></section>
       <!-- End reviews -->
@@ -66,7 +71,6 @@
     <!-- Google Maps -->
     <script
       async
-      defer
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD4OpltmVxewqJVapqNOAzRaOEW_4LQj2c&libraries=places&callback=initMap"
     ></script>
     <!-- End scripts -->
