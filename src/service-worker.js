@@ -1,4 +1,3 @@
-import idb from 'idb';
 import SyncHelper from './scripts/syncHelper.js';
 
 const staticCacheName = 'restaurant-reviews-static-v1';
@@ -65,12 +64,36 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-self.addEventListener('sync', (event) => {
-  self.registration.showNotification('Sync event fired!');
-  // if (event.tag == 'SyncReviews') {
-  //   console.log('sync reviews');
-  //   // event.waitUntil(console.log('sync reviews'));
-  // }
+self.addEventListener('sync', async (event) => {
+  if (event.tag == 'syncFavorites') {
+    event.waitUntil(
+      SyncHelper.syncFavorites().catch((err) => {
+        if (event.lastChance) {
+          SyncHelper.clearStore('offlineFavorites');
+        }
+      }),
+    );
+  }
+  if (event.tag == 'syncReviews') {
+    event.waitUntil(
+      SyncHelper.syncReviews()
+        .then(function() {
+          self.registration.showNotification('Review Posted!');
+        })
+        .catch((err) => {
+          if (event.lastChance) {
+            self.registration.showNotification(
+              'Some of your reviews have failed to be posted online',
+            );
+            SyncHelper.clearStore('offlineReviews');
+          } else {
+            self.registration.showNotification(
+              'Some reviews not be posted online, but they will be saved offline for now',
+            );
+          }
+        }),
+    );
+  }
 });
 
 function servePhoto(request) {

@@ -3,6 +3,7 @@ const webpack = require('webpack-stream');
 const uglify = require('gulp-uglify');
 const browserSync = require('browser-sync').create();
 const sass = require('gulp-sass');
+const autoprefixer = require('gulp-autoprefixer');
 const imagemin = require('gulp-imagemin');
 const imageminMozjpeg = require('imagemin-mozjpeg');
 const imageResize = require('gulp-image-resize');
@@ -20,6 +21,11 @@ gulp.task('styles', () =>
       sass({
         outputStyle: 'compressed',
       }).on('error', sass.logError),
+    )
+    .pipe(
+      autoprefixer({
+        browsers: ['last 2 versions'],
+      }),
     )
     .pipe(gulp.dest('./src/css'))
     .pipe(browserSync.stream()),
@@ -98,7 +104,7 @@ gulp.task(
   gulp.series(['styles'], () => {
     browserSync.init({
       server: './src',
-      port: 3333,
+      port: 8000,
     });
 
     gulp.watch('./src/sass/**/*.scss', gulp.series(['styles']));

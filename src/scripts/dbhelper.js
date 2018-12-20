@@ -9,10 +9,13 @@ class DBHelper {
   static openDatabase() {
     return idb.open('restaurants', 1, (upgradeDb) => {
       upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
+
       const reviewStore = upgradeDb.createObjectStore('reviews', { keyPath: 'id' });
       reviewStore.createIndex('restaurant_id', 'restaurant_id');
       reviewStore.createIndex('date', 'createdAt');
+
       upgradeDb.createObjectStore('offlineFavorites', { keyPath: 'restaurant_id' });
+
       const offlineReviewStore = upgradeDb.createObjectStore('offlineReviews', {
         keyPath: 'id',
         autoIncrement: true,
@@ -272,6 +275,7 @@ class DBHelper {
         cursor.delete();
         return cursor.continue().then(deleteRest);
       });
+    return tx.complete;
   }
   /**
    * Add a restaurant to IDB.
@@ -284,6 +288,7 @@ class DBHelper {
     const store = tx.objectStore('restaurants');
     // update restaurant on indexed db
     store.put(restaurant);
+    return tx.complete;
   }
 
   /**
@@ -296,6 +301,19 @@ class DBHelper {
     const tx = db.transaction('reviews', 'readwrite');
     const store = tx.objectStore('reviews');
     reviews.forEach((review) => store.put(review));
+    return tx.complete;
+  }
+  /**
+   * Add review to IDB.
+   */
+
+  static async addReviewToIDB(review) {
+    const db = await DBHelper.openDatabase();
+    if (!db) return;
+    const tx = db.transaction('reviews', 'readwrite');
+    const store = tx.objectStore('reviews');
+    store.put(review);
+    return tx.complete;
   }
   /**
    * Add offline review.
@@ -307,8 +325,8 @@ class DBHelper {
         if (!db) return;
         const tx = db.transaction('offlineReviews', 'readwrite');
         const store = tx.objectStore('offlineReviews');
-        store.put({ ...review, offline: true });
-        callback(null, 'Adding Review...');
+        store.put(review);
+        callback(null, review);
         // Request for notification permission
         if (Notification.permission !== 'granted') {
           await DBHelper.requestNotificationPermission();
@@ -316,7 +334,7 @@ class DBHelper {
         // register a sync
         navigator.serviceWorker.ready
           .then((reg) => {
-            return reg.sync.register('SyncReviews');
+            return reg.sync.register('syncReviews');
           })
           .catch((err) => console.log(err));
       } else {
@@ -327,7 +345,7 @@ class DBHelper {
     }
   }
   /**
-   * Add offline review.
+   * Get offline review.
    */
   static async getOfflineReviews(id) {
     const db = await DBHelper.openDatabase();
@@ -342,9 +360,20 @@ class DBHelper {
     return index.getAll(id);
   }
   /**
+   * Delete offline review from IDB.
+   */
+  static async deleteOfflineReviewFromIDB(id) {
+    const db = await DBHelper.openDatabase();
+    if (!db) return;
+    const tx = db.transaction('offlineReviews', 'readwrite');
+    const store = tx.objectStore('offlineReviews');
+    store.delete(id);
+    return tx.complete;
+  }
+  /**
    * Add a new review
    */
-  static async postReview(data, callback) {
+  static async postReview(data, callback = () => {}) {
     try {
       const response = await fetch(`${DBHelper.DATABASE_URL}/reviews`, {
         method: 'POST',
@@ -352,31 +381,69 @@ class DBHelper {
       });
       if (response.status === 201) {
         const responseData = await response.json();
-        callback(null, 'Review added');
+        callback(null, responseData);
+        return responseData;
       }
     } catch (error) {
       callback('Error adding review', null);
+      return error;
     }
+  }
+  /**
+   * Add offline favorite.
+   */
+  static async addOfflineFavourite(restaurant_id, isFavourite, callback = () => {}) {
+    try {
+      if (navigator.serviceWorker && window.SyncManager) {
+        const db = await DBHelper.openDatabase();
+        if (!db) return;
+        const tx = db.transaction('offlineFavorites', 'readwrite');
+        const store = tx.objectStore('offlineFavorites');
+        store.put({ restaurant_id, isFavourite });
+        callback(null, 'Liked');
+        // register a sync
+        navigator.serviceWorker.ready
+          .then((reg) => {
+            return reg.sync.register('syncFavourites');
+          })
+          .catch((err) => console.log(err));
+      } else {
+        DBHelper.toggleRestaurantFavoriteStatus(restaurant_id, isFavourite, callback);
+      }
+    } catch (error) {
+      callback(error, null);
+    }
+  }
+  /**
+   * Delete offline favorite from IDB.
+   */
+  static async deleteOfflineFavoriteFromIDB(id) {
+    const db = await DBHelper.openDatabase();
+    if (!db) return;
+    const tx = db.transaction('offlineFavorites', 'readwrite');
+    const store = tx.objectStore('offlineFavorites');
+    store.delete(id);
+    return tx.complete;
   }
   /**
    * Toggle a restaurants favourite status
    */
-  static async toggleRestaurantFavoriteStatus(id, isFavourite) {
+  static async toggleRestaurantFavoriteStatus(restaurant_id, isFavourite, callback = () => {}) {
     try {
       const response = await fetch(
-        `${DBHelper.DATABASE_URL}/restaurants/${id}?is_favorite=${!isFavourite}`,
+        `${DBHelper.DATABASE_URL}/restaurants/${restaurant_id}?is_favorite=${!isFavourite}`,
         {
           method: 'PUT',
         },
       );
-      console.log(response);
       if (response.status === 200) {
         const responseData = await response.json();
+        callback(null, responseData);
         console.log(responseData);
-        // callback(null, responseData);
       }
     } catch (error) {
-      // callback(error, null);
+      callback(error, null);
+      return error;
     }
   }
 

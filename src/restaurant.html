@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta charset="utf-8" />
@@ -21,11 +21,11 @@
     <header>
       <!-- Beginning nav -->
       <nav>
-        <h1><a href="/" aria-div="Link Restaurant Reviews">Restaurant Reviews</a></h1>
+        <h1><a href="/" aria-label="Link Restaurant Reviews">Restaurant Reviews</a></h1>
       </nav>
       <!-- Beginning breadcrumb -->
       <ul id="breadcrumb">
-        <li><a href="/" aria-div="Link Home">Home</a></li>
+        <li><a href="/" aria-label="Link Home">Home</a></li>
         <li id="page-breadcrumb"></li>
       </ul>
       <!-- End breadcrumb -->
@@ -44,8 +44,10 @@
           <h1 id="restaurant-name"></h1>
           <img id="restaurant-img" alt="restaurant image" />
           <p id="restaurant-cuisine"></p>
-          <p id="restaurant-address"></p>
-          <button class="favorite-button">&#10084;</button>
+          <div>
+            <p id="restaurant-address"></p>
+            <button class="favorite-button">&#10084;</button>
+          </div>
           <table id="restaurant-hours"></table>
         </section>
       </section>

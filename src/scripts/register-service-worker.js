@@ -10,6 +10,4 @@ const registerServiceWorker = () => {
       });
   }
 };
-if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-  registerServiceWorker();
-}
+registerServiceWorker();

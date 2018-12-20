@@ -78,13 +78,18 @@ const fillRestaurantHTML = (data = restaurant) => {
   address.innerHTML = data.address;
 
   const favoriteButton = document.querySelector('.favorite-button');
-  if (JSON.parse(restaurant.is_favorite)) {
-    favoriteButton.classList.add('favorited');
-  } else {
-    favoriteButton.classList.remove('favorited');
-  }
+
+  const isTrue = JSON.parse(restaurant.is_favorite);
+  toggleFavoriteButton(isTrue);
+
   favoriteButton.addEventListener('click', () => {
-    DBHelper.toggleRestaurantFavoriteStatus(restaurant.id, JSON.parse(restaurant.is_favorite));
+    DBHelper.toggleRestaurantFavoriteStatus(restaurant.id, isTrue, (error, response) => {
+      if (error) {
+        alert('Error occured');
+        return;
+      }
+      toggleFavoriteButton(!isTrue);
+    });
   });
 
   const image = document.getElementById('restaurant-img');
@@ -103,6 +108,18 @@ const fillRestaurantHTML = (data = restaurant) => {
   }
   // fill reviews
   fetchRestaurantReviews(restaurant.id);
+};
+
+/**
+ * toggle favorite button
+ */
+const toggleFavoriteButton = (isTrue) => {
+  const favoriteButton = document.querySelector('.favorite-button');
+  if (isTrue) {
+    favoriteButton.classList.add('favorited');
+  } else {
+    favoriteButton.classList.remove('favorited');
+  }
 };
 
 /**
@@ -141,7 +158,7 @@ const fillReviewsHTML = (reviews) => {
     container.removeChild(container.lastChild);
   }
   // remove all child nodes of this container incase it has been filled before by data from indexed db
-  const title = document.createElement('h3');
+  const title = document.createElement('h1');
   title.innerHTML = 'Reviews';
   container.appendChild(title);
 
@@ -164,20 +181,12 @@ const fillReviewsHTML = (reviews) => {
 /**
  * Create review HTML and add it to the webpage.
  */
-const createReviewHTML = (review) => {
+const createReviewHTML = (review, newReview = false) => {
   const li = document.createElement('li');
   li.tabIndex = 0;
 
-  if (review.offline) {
-    li.className = 'offline-review';
-    const offlineText = document.createElement('p');
-    offlineText.className = 'offline-text';
-    offlineText.innerHTML = 'Adding Review ...';
-    li.appendChild(offlineText);
-  }
-
   const name = document.createElement('h3');
-  name.innerHTML = review.name;
+  name.innerHTML = review.name.toUpperCase();
   li.appendChild(name);
 
   const date = document.createElement('h4');
@@ -185,20 +194,48 @@ const createReviewHTML = (review) => {
   li.appendChild(date);
 
   const rating = document.createElement('h3');
-  rating.innerHTML = `Rating: ${review.rating}`;
-  for (let i = 0; i < review.rating; i++) {
-    const star = document.createElement('span');
-    star.className = 'star-icon';
-    star.innerHTML = '&#9733;';
-    rating.appendChild(star);
-  }
+  rating.innerHTML = `Rating: ${review.rating}&nbsp;Stars`;
+  // for (let i = 0; i < Number(review.rating); i++) {
+  //   const star = document.createElement('span');
+  //   star.className = 'star-icon';
+  //   star.innerHTML = '&#9733;';
+  //   rating.appendChild(star);
+  // }
   li.appendChild(rating);
 
   const comments = document.createElement('p');
   comments.innerHTML = review.comments;
   li.appendChild(comments);
 
-  return li;
+  // if its a new review, show the user
+  if (newReview) {
+    li.classList.add('new-review');
+    const newReviewText = document.createElement('p');
+    newReviewText.classList.add('new-review-text');
+    newReviewText.innerHTML = 'New';
+    li.insertBefore(newReviewText, li.childNodes[0]);
+
+    // remove class and text of new review after 10 seconds
+    setTimeout(() => {
+      li.classList.remove('new-review');
+      // remove the first child of the element since that is the new review text
+      li.removeChild(li.childNodes[0]);
+    }, 10000);
+    const list = document.getElementById('reviews-list');
+    // if there is no reviews list create one
+    if (list) {
+      // insert at the top of the list
+      list.insertBefore(li, list.childNodes[0]);
+    } else {
+      const container = document.getElementById('reviews-container');
+      list = document.createElement('ul');
+      list.setAttribute('id', 'reviews-list');
+      list.appendChild(li);
+      container.appendChild(list);
+    }
+  } else {
+    return li;
+  }
 };
 
 const createReviewFormHTML = () => {
@@ -209,14 +246,21 @@ const createReviewFormHTML = () => {
 
   const form = document.createElement('form');
   form.setAttribute('id', 'review-form');
-  const title = document.createElement('h3');
+  const title = document.createElement('h2');
   title.innerHTML = 'Review Restaurant';
   form.appendChild(title);
 
   const nameInputDiv = document.createElement('div');
+  nameInputDiv.classList.add('form-input-group');
+  const nameInputLabel = document.createElement('label');
+  nameInputLabel.innerHTML = 'Name';
+  nameInputLabel.setAttribute('id', 'name_label');
+  nameInputDiv.appendChild(nameInputLabel);
   const nameInput = document.createElement('input');
   nameInput.setAttribute('placeholder', 'Name');
   nameInput.setAttribute('name', 'name');
+  nameInput.setAttribute('id', 'name');
+  nameInput.setAttribute('aria-labelledby', 'name_label');
   nameInput.setAttribute('type', 'text');
   nameInput.setAttribute('required', true);
   nameInputDiv.appendChild(nameInput);
@@ -224,28 +268,36 @@ const createReviewFormHTML = () => {
   form.appendChild(nameInputDiv);
 
   const radioInputDiv = document.createElement('div');
+  const text = document.createElement('p');
+  text.innerHTML = 'Select a star rating';
+  radioInputDiv.appendChild(text);
 
-  for (let i = 1; i <= 5; i++) {
+  radioInputDiv.classList.add('rating');
+  for (let i = 5; i >= 1; i--) {
     const radioInput = document.createElement('input');
     radioInput.setAttribute('value', i);
+    radioInput.setAttribute('id', `star${i}`);
     radioInput.setAttribute('type', 'radio');
     radioInput.setAttribute('name', 'rating');
     radioInput.setAttribute('required', true);
     radioInputDiv.appendChild(radioInput);
-
-    for (let j = 0; j < i; j++) {
-      const star = document.createElement('span');
-      star.className = 'star-icon';
-      star.innerHTML = '&#9733;';
-      radioInputDiv.appendChild(star);
-    }
+    const radioInputLabel = document.createElement('label');
+    radioInputLabel.setAttribute('for', `star${i}`);
+    radioInputDiv.appendChild(radioInputLabel);
   }
-
   form.appendChild(radioInputDiv);
+
   const commentTextAreaDiv = document.createElement('div');
+  commentTextAreaDiv.classList.add('form-input-group');
+  const commentTextAreaLabel = document.createElement('label');
+  commentTextAreaLabel.innerHTML = 'Comments';
+  commentTextAreaLabel.setAttribute('id', 'comments_label');
+  commentTextAreaDiv.appendChild(commentTextAreaLabel);
   const commentTextArea = document.createElement('textarea');
   commentTextArea.setAttribute('placeholder', 'Comments');
   commentTextArea.setAttribute('name', 'comments');
+  commentTextArea.setAttribute('id', 'comments');
+  commentTextArea.setAttribute('aria-labelledby', 'comments_label');
   commentTextArea.setAttribute('rows', 4);
   commentTextArea.setAttribute('required', true);
   commentTextAreaDiv.appendChild(commentTextArea);
@@ -263,6 +315,7 @@ const createReviewFormHTML = () => {
 
   form.onsubmit = (e) => {
     e.preventDefault();
+    addButton.setAttribute('disabled', true);
     const data = {
       restaurant_id: restaurant.id,
       name: form.name.value,
@@ -270,13 +323,13 @@ const createReviewFormHTML = () => {
       rating: form.rating.value,
       createdAt: new Date().toISOString(),
     };
-    DBHelper.addOfflineReview(data, (error, response) => {
+    DBHelper.addOfflineReview(data, (error, review) => {
+      addButton.setAttribute('disabled', false);
       if (error) {
         alert('Could not add review');
         return;
       }
-      alert(response);
-      fetchRestaurantReviews(restaurant.id);
+      createReviewHTML(review, true);
     });
   };
 
