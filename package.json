@@ -37,7 +37,7 @@
     "gulp-uglify": "^3.0.1",
     "imagemin-mozjpeg": "^8.0.0",
     "webpack": "^4.27.1",
-    "webpack-cli": "^3.1.2",
+    "webpack-cli": "^3.3.12",
     "webpack-stream": "^5.2.1"
   },
   "dependencies": {
